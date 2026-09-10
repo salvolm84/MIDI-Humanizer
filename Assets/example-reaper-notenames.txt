@@ -1,0 +1,14 @@
+# Reaper MIDI note names - load via Load drum map... or drop onto the plugin
+36 Kick In
+38 Snare Top
+40 Snare Rim
+41 Floor Tom
+42 Hat Closed
+44 Hat Pedal
+46 Hat Open
+47 Rack Tom 2
+48 Rack Tom 1
+49 Crash Left
+51 Ride
+53 Ride Bell
+57 Crash Right

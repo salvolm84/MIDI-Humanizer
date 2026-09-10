@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<InstrumentMap>
+  <string name="Name" value="Example Kit"/>
+  <list name="Map" type="list">
+    <item>
+      <string name="Name" value="Crash Left"/>
+      <int name="INote" value="49"/>
+      <int name="ONote" value="49"/>
+      <int name="Channel" value="-1"/>
+    </item>
+    <item>
+      <string name="Name" value="Ride"/>
+      <int name="INote" value="51"/>
+      <int name="ONote" value="51"/>
+      <int name="Channel" value="-1"/>
+    </item>
+    <item>
+      <string name="Name" value="Hat Closed"/>
+      <int name="INote" value="42"/>
+      <int name="ONote" value="42"/>
+      <int name="Channel" value="-1"/>
+    </item>
+    <item>
+      <string name="Name" value="Hat Open"/>
+      <int name="INote" value="46"/>
+      <int name="ONote" value="46"/>
+      <int name="Channel" value="-1"/>
+    </item>
+    <item>
+      <string name="Name" value="Rack Tom 1"/>
+      <int name="INote" value="48"/>
+      <int name="ONote" value="48"/>
+      <int name="Channel" value="-1"/>
+    </item>
+    <item>
+      <string name="Name" value="Rack Tom 2"/>
+      <int name="INote" value="47"/>
+      <int name="ONote" value="47"/>
+      <int name="Channel" value="-1"/>
+    </item>
+    <item>
+      <string name="Name" value="Floor Tom"/>
+      <int name="INote" value="41"/>
+      <int name="ONote" value="41"/>
+      <int name="Channel" value="-1"/>
+    </item>
+    <item>
+      <string name="Name" value="Snare Top"/>
+      <int name="INote" value="38"/>
+      <int name="ONote" value="38"/>
+      <int name="Channel" value="-1"/>
+    </item>
+    <item>
+      <string name="Name" value="Kick In"/>
+      <int name="INote" value="36"/>
+      <int name="ONote" value="36"/>
+      <int name="Channel" value="-1"/>
+    </item>
+  </list>
+  <list name="Order" type="list">
+    <item><int name="Item" value="0"/></item>
+    <item><int name="Item" value="1"/></item>
+    <item><int name="Item" value="2"/></item>
+    <item><int name="Item" value="3"/></item>
+    <item><int name="Item" value="4"/></item>
+    <item><int name="Item" value="5"/></item>
+    <item><int name="Item" value="6"/></item>
+    <item><int name="Item" value="7"/></item>
+    <item><int name="Item" value="8"/></item>
+  </list>
+</InstrumentMap>
