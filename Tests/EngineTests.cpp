@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Salvatore La Malfa
+
 /*
     Console checks for the parts of the plugin that are pure logic: the humanizer
     transform, the MIDI file round trip, the drum map parsers, and the clip player's

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Salvatore La Malfa
+
 /*
     Renders the plugin editor to a PNG without needing a host or a visible window, so
     the layout can be inspected from a build script.

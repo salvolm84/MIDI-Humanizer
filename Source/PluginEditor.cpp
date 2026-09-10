@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Salvatore La Malfa
+
 #include "PluginEditor.h"
 #include "ParamIDs.h"
 
@@ -16,6 +19,18 @@ namespace
     constexpr int velocityHeight     = 96;
     constexpr int scrollBarThickness = 12;
     constexpr int statusHeight       = 20;
+
+    /** The plugin version, which only the plugin targets define; the console tools that
+        link this file for testing do not.
+    */
+    juce::String versionString()
+    {
+       #if defined (JucePlugin_VersionString)
+        return JucePlugin_VersionString;
+       #else
+        return "dev";
+       #endif
+    }
 
     bool isMidiPath (const juce::File& file)
     {
@@ -347,6 +362,17 @@ void MidiHumanizerEditor::buildHeader()
     brandLabel.setText ("MIDI HUMANIZER", juce::dontSendNotification);
     brandLabel.setFont (theme::labelFont (15.0f, true));
     brandLabel.setColour (juce::Label::textColourId, theme::textPrimary);
+
+    // The AGPL asks an interactive program to carry a copyright notice, a no-warranty
+    // notice and a pointer to the licence. There is no menu bar in a plugin, so the
+    // brand label holds it.
+    brandLabel.setTooltip ("MIDI Humanizer " + versionString()
+                           + "\nCopyright (c) 2026 Salvatore La Malfa"
+                           + "\n\nFree software under the GNU AGPL v3 or later, and provided with "
+                             "ABSOLUTELY NO WARRANTY."
+                           + "\nSource and licence: https://github.com/salvolm84/MIDI-Humanizer"
+                           + "\n\nBuilt with JUCE (AGPLv3) and the Steinberg VST3 SDK (MIT). "
+                             "VST3 is a trademark of Steinberg Media Technologies GmbH.");
     addAndMakeVisible (brandLabel);
 
     clipInfoLabel.setFont (theme::labelFont (12.0f));

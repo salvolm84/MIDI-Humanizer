@@ -15,6 +15,7 @@ transport.
   approximation of it.
 
 Built against **JUCE 8.0.12**, C++20, macOS (Apple Silicon + Intel).
+Licensed under the [GNU AGPL v3 or later](LICENSE).
 
 ---
 
@@ -594,14 +595,41 @@ Beyond the obvious round trips, the checks assert the properties the design lean
 
 ## Licence
 
-No licence has been chosen for this code yet, so default copyright applies: it is not yet
-open source in any usable sense. Pick one before expecting anyone else to use it.
+**GNU Affero General Public License v3.0 or later** ([`LICENSE`](LICENSE)).
 
-Note that the plugin links **JUCE**, which is dual-licensed AGPLv3 or commercial. If you
-distribute binaries under the AGPL path, that carries source-availability obligations for
-the whole work; the alternative is a JUCE commercial licence. The VST3 SDK Steinberg
-distributes with JUCE has its own terms as well. Worth settling before publishing builds
-more widely than a personal repository.
+This is not an arbitrary choice. The plugin links **JUCE**, which is dual-licensed
+[AGPLv3](https://www.gnu.org/licenses/agpl-3.0.en.html) or under a
+[commercial JUCE licence](https://juce.com/legal/juce-8-licence/). Taking the open-source
+path means the combined work has to be AGPLv3, so that is what this is. The project's own
+files are marked `AGPL-3.0-or-later`; the binary as a whole is effectively AGPLv3 because
+of JUCE.
+
+What that means in practice:
+
+- You may use, modify and redistribute this, including commercially.
+- Anything you distribute that is built from it must also be AGPLv3, with source made
+  available to whoever receives the binary. This repository serves that purpose for the
+  builds on the releases page.
+- The AGPL's distinguishing clause (§13) covers making a modified version available to
+  users over a network. A desktop plugin does not do that, so in practice it behaves like
+  the GPL here.
+- No warranty, per §15–16.
+
+If you would rather ship a closed-source product built on this code, the route is a
+commercial JUCE licence plus your own agreement with every other copyright holder in the
+combined work — the AGPL grant here does not extend to that.
+
+### Third-party components
+
+| Component | Licence |
+| --- | --- |
+| [JUCE 8](https://juce.com) | AGPLv3 or commercial — the AGPL option is taken here |
+| Steinberg VST3 SDK (bundled with JUCE) | MIT |
+
+VST3 is a trademark of Steinberg Media Technologies GmbH.
+
+The distributed builds are **ad-hoc signed, not notarised**. See [Install](#install) for
+the quarantine flag that has to be cleared after downloading.
 
 ---
 

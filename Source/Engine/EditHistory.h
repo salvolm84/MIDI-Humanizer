@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (c) 2026 Salvatore La Malfa
+
 #pragma once
 
 #include <juce_data_structures/juce_data_structures.h>
