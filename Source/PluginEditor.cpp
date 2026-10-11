@@ -1095,7 +1095,7 @@ void MidiHumanizerEditor::updateHostStatus()
         switch (status.source)
         {
             case MidiHumanizerProcessor::TransportSource::hostSynced:
-                text = "HOST: playing, bar-locked";
+                text = "HOST: playing, synced";
                 colour = theme::accent;
                 break;
 

@@ -303,6 +303,54 @@ private:
 };
 
 //==============================================================================
+/** The on/off counterpart of ScopedKnob: a toggle reading and writing through
+    callbacks, so it can follow the master or a lane as the scope changes.
+*/
+class ScopedToggle final : public juce::Component
+{
+public:
+    explicit ScopedToggle (const juce::String& caption)
+    {
+        button.setButtonText (caption);
+        button.onClick = [this]
+        {
+            if (! updating && setter != nullptr)
+                setter (button.getToggleState() ? 1.0 : 0.0);
+        };
+        addAndMakeVisible (button);
+    }
+
+    void resized() override { button.setBounds (getLocalBounds()); }
+
+    void setCallbacks (std::function<double()> newGetter, std::function<void (double)> newSetter)
+    {
+        getter = std::move (newGetter);
+        setter = std::move (newSetter);
+        refresh();
+    }
+
+    void refresh()
+    {
+        if (getter == nullptr)
+            return;
+
+        const juce::ScopedValueSetter<bool> guard (updating, true);
+        button.setToggleState (getter() > 0.5, juce::dontSendNotification);
+    }
+
+    void setDimmed (bool shouldDim) { button.setAlpha (shouldDim ? 0.45f : 1.0f); }
+    void setHelp (const juce::String& text) { button.setTooltip (text); }
+
+private:
+    juce::ToggleButton button;
+    std::function<double()> getter;
+    std::function<void (double)> setter;
+    bool updating = false;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ScopedToggle)
+};
+
+//==============================================================================
 /** Titled container: a dark rounded box with a small caps heading. */
 class SectionPanel final : public juce::Component
 {

@@ -836,6 +836,65 @@ static void testVelocitySpreadCentresOnTarget()
            "and stays inside the requested spread (" + juce::String (low) + ".." + juce::String (high) + ")");
 }
 
+static void testVelocitySpreadUpOnlyFloorsOnTarget()
+{
+    section ("Spread up only: Target becomes the floor and the spread only adds");
+
+    const auto source = makeTestBeat();   // hats alternate 96 and 74
+
+    mh::HumanizeParams p;
+    p.seed = 21;
+    p.referenceBpm = 120.0;
+    p.limitsEnabled = false;
+
+    mh::LaneSettings lane;
+    lane.velocityTarget = 80;
+    lane.velocityDynamics = 50.0f;
+    lane.velocitySpread = 15.0f;
+    lane.velocitySpreadUpOnly = true;
+    p.lane[42] = lane;
+
+    const auto result = mh::Humanizer::process (source, p);
+
+    auto low = 127, high = 1;
+
+    for (auto& n : result.notes)
+    {
+        if (n.noteNumber != 42)
+            continue;
+
+        low = juce::jmin (low, n.velocity);
+        high = juce::jmax (high, n.velocity);
+    }
+
+    // Quietest source hit lands on 80; half of the 22-point accent survives on top.
+    check (low >= 80, "no hit falls below the target (lowest " + juce::String (low) + ")");
+    check (high <= 80 + 11 + 15, "and none exceeds floor + kept dynamics + spread (highest "
+                                 + juce::String (high) + ")");
+    check (high > 80 + 11, "the spread actually lifts some hits");
+
+    // Bipolar mode on the same settings must still dip below the target.
+    p.lane[42].velocitySpreadUpOnly = false;
+    const auto bipolar = mh::Humanizer::process (source, p);
+
+    auto bipolarLow = 127;
+
+    for (auto& n : bipolar.notes)
+        if (n.noteNumber == 42)
+            bipolarLow = juce::jmin (bipolarLow, n.velocity);
+
+    check (bipolarLow < 80, "the bipolar spread still wanders below the level");
+
+    mh::LaneSettingsTable table;
+    auto stored = lane;
+    stored.hasOverride = true;
+    table.set (42, stored);
+
+    mh::LaneSettingsTable restored;
+    restored.restoreFromValueTree (table.toValueTree());
+    check (restored.get (42).velocitySpreadUpOnly, "the option survives a state round trip");
+}
+
 static void testLaneSettingsState()
 {
     section ("Lane settings survive plugin state");
@@ -1296,6 +1355,7 @@ int main()
     testTimingBias();
     testVelocityTargetAndDynamics();
     testVelocitySpreadCentresOnTarget();
+    testVelocitySpreadUpOnlyFloorsOnTarget();
     testLaneSettingsState();
     testLaneLinking();
     testGrooveExtraction();

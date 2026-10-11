@@ -190,6 +190,7 @@ juce::ValueTree LaneSettingsTable::toValueTree() const
         row.setProperty ("vTarget", lane.velocityTarget, nullptr);
         row.setProperty ("vDyn", lane.velocityDynamics, nullptr);
         row.setProperty ("vSpread", lane.velocitySpread, nullptr);
+        row.setProperty ("vSpreadUp", lane.velocitySpreadUpOnly, nullptr);
         row.setProperty ("accent", lane.accentAmount, nullptr);
         row.setProperty ("minGap", lane.minGapMs, nullptr);
         tree.appendChild (row, nullptr);
@@ -225,6 +226,7 @@ void LaneSettingsTable::restoreFromValueTree (const juce::ValueTree& tree)
         lane.velocityTarget   = juce::jlimit (0, 127, (int) row.getProperty ("vTarget", 0));
         lane.velocityDynamics = (float) row.getProperty ("vDyn", 0.0);
         lane.velocitySpread   = (float) row.getProperty ("vSpread", 0.0);
+        lane.velocitySpreadUpOnly = (bool) row.getProperty ("vSpreadUp", false);
         lane.accentAmount     = (float) row.getProperty ("accent", 0.0);
         lane.minGapMs         = (float) row.getProperty ("minGap", 20.0);
 

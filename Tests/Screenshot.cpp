@@ -68,7 +68,8 @@ int main (int argc, char** argv)
     const auto laneFieldFromName = [] (const juce::String& name) -> int
     {
         static const char* names[] = { "timeBias", "timeSpread", "swing", "velTarget",
-                                       "velDynamics", "velSpread", "accent", "minGap" };
+                                       "velDynamics", "velSpread", "accent", "minGap",
+                                       "velSpreadUp" };
 
         for (int i = 0; i < (int) juce::numElementsInArray (names); ++i)
             if (name == names[i])

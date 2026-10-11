@@ -39,6 +39,7 @@ inline constexpr auto swing       = "swing";
 inline constexpr auto velTarget   = "velTarget";    ///< 0 = keep source levels
 inline constexpr auto velDynamics = "velDynamics";  ///< % of source accenting kept
 inline constexpr auto velSpread   = "velSpread";
+inline constexpr auto velSpreadUp = "velSpreadUp";  ///< spread only adds; target is the floor
 inline constexpr auto accent      = "accent";
 inline constexpr auto minGap      = "minGap";
 

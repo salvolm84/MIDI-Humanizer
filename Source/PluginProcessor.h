@@ -188,7 +188,7 @@ public:
     enum class TransportSource
     {
         stopped = 0,
-        hostSynced,     ///< the host gave us a musical position: fully bar-locked
+        hostSynced,     ///< the host gave us a musical position; the clip starts where playback does
         hostInferred,   ///< the host is rolling but gave no usable position
         audition        ///< our own clock, driven by the Audition switch
     };
@@ -277,6 +277,8 @@ private:
     std::atomic<double> hostBpm { 0.0 };   ///< 0 = no host tempo seen yet
 
     double internalPpq = 0.0;
+    double hostStartPpq = 0.0;      ///< host position the current run of playback began at
+    double expectedHostPpq = 0.0;   ///< where the host should be next block if nothing jumped
     TransportSource lastTransportSource = TransportSource::stopped;
 
     static constexpr int testNoteNumber = 36;   // GM kick, audible on any drum kit

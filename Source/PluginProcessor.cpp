@@ -81,6 +81,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout MidiHumanizerProcessor::crea
                 intParam   (pid::velTarget,   "Velocity Target",   0, 127, 0),
                 floatParam (pid::velDynamics, "Velocity Dynamics", percent(), 0.0f, "%"),
                 floatParam (pid::velSpread,   "Velocity Spread",   { 0.0f, 63.0f, 0.5f }, 12.0f, ""),
+                boolParam  (pid::velSpreadUp, "Velocity Spread Up Only", false),
                 floatParam (pid::accent,      "Accents",           percent(), 0.0f, "%"),
                 floatParam (pid::minGap,      "Min Hit Gap",       { 0.0f, 80.0f, 0.5f }, 20.0f, "ms"));
 
@@ -157,6 +158,8 @@ void MidiHumanizerProcessor::prepareToPlay (double sampleRate, int)
     currentSampleRate = sampleRate > 0.0 ? sampleRate : 48000.0;
     player.prepare (currentSampleRate);
     internalPpq = 0.0;
+    hostStartPpq = 0.0;
+    expectedHostPpq = 0.0;
     lastTransportSource = TransportSource::stopped;
     diagBlocks.store (0, std::memory_order_relaxed);
     diagNoteOns.store (0, std::memory_order_relaxed);
@@ -274,10 +277,24 @@ void MidiHumanizerProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     switch (source)
     {
         case TransportSource::hostSynced:
-            context.ppqStart = hostPpq;
+        {
+            // The clip always starts from its top wherever the host starts rolling, so
+            // positions are measured from where playback began rather than from bar 1 of
+            // the project. A locate or a cycle jump while rolling is a fresh start too:
+            // a jump bigger than one block cannot be the transport simply advancing.
+            const auto jumped = lastTransportSource != TransportSource::hostSynced
+                             || std::abs (hostPpq - expectedHostPpq) > blockPpq + 1.0e-6;
+
+            if (jumped)
+                hostStartPpq = hostPpq;
+
+            expectedHostPpq = hostPpq + blockPpq;
+
+            context.ppqStart = hostPpq - hostStartPpq;
             context.transportRunning = true;
-            internalPpq = hostPpq;   // keeps a later audition hand-over seamless
+            internalPpq = context.ppqStart;
             break;
+        }
 
         case TransportSource::hostInferred:
         case TransportSource::audition:
@@ -354,7 +371,8 @@ void MidiHumanizerProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     diagHostPlaying.store (hostPlaying, std::memory_order_relaxed);
     diagHaveMusicalPosition.store (haveHostPpq, std::memory_order_relaxed);
     diagSource.store ((int) source, std::memory_order_relaxed);
-    diagPpq.store (context.ppqStart, std::memory_order_relaxed);
+    diagPpq.store (source == TransportSource::hostSynced ? hostPpq : context.ppqStart,
+                   std::memory_order_relaxed);
     diagBlocks.fetch_add (1, std::memory_order_relaxed);
     diagNoteOns.fetch_add (noteOns, std::memory_order_relaxed);
 
@@ -442,6 +460,7 @@ LaneSettings MidiHumanizerProcessor::getMasterLaneSettings() const
     master.velocityTarget   = (int) value (pid::velTarget);
     master.velocityDynamics = value (pid::velDynamics);
     master.velocitySpread   = value (pid::velSpread);
+    master.velocitySpreadUpOnly = value (pid::velSpreadUp) > 0.5f;
     master.accentAmount     = value (pid::accent);
     master.minGapMs         = value (pid::minGap);
     return master;
@@ -775,6 +794,7 @@ void MidiHumanizerProcessor::applyFactoryPreset (const FactoryPreset& factory)
     setParam (pid::velTarget,   (float) factory.master.velocityTarget);
     setParam (pid::velDynamics, factory.master.velocityDynamics);
     setParam (pid::velSpread,   factory.master.velocitySpread);
+    setParam (pid::velSpreadUp, factory.master.velocitySpreadUpOnly ? 1.0f : 0.0f);
     setParam (pid::accent,      factory.master.accentAmount);
     setParam (pid::minGap,      factory.master.minGapMs);
 

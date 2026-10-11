@@ -87,7 +87,8 @@ private:
 
     std::vector<std::unique_ptr<juce::Component>> owned;
     std::vector<Column> columns;
-    std::array<ScopedKnob*, (size_t) numLaneFields> scopedKnobs {};
+    std::array<ScopedKnob*, (size_t) numLaneFields> scopedKnobs {};   ///< null for non-knob fields
+    ScopedToggle* spreadUpToggle = nullptr;
 
     // Scope bar
     juce::TextButton masterButton { "MASTER" };

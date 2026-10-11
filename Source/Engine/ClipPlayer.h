@@ -51,7 +51,8 @@ private:
 
     Positions are derived from the host's PPQ position every block rather than from an
     internal sample counter, so looping, tempo changes and jumps in the timeline all
-    stay locked to the arrangement. Sounding notes are tracked separately from the clip,
+    stay locked to the transport. The processor passes positions relative to where
+    playback started, so position 0 is always the top of the clip. Sounding notes are tracked separately from the clip,
     which is what guarantees a note-off even if the clip is replaced, the transport
     stops, or the note vanishes because the user changed a humanization setting.
 */

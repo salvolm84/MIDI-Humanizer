@@ -252,6 +252,77 @@ static void testProcessorSilentWithoutAClip()
     check (result.stuck == 0, "and nothing is left sounding");
 }
 
+static void testHostStartPlaysClipFromTop (const juce::File& clipFile)
+{
+    section ("Wherever the host starts, the clip starts from its top");
+
+    constexpr auto sampleRate = 48000.0;
+    constexpr auto blockSize = 512;
+
+    mh::MidiHumanizerProcessor processor;
+    juce::String error;
+    check (processor.loadClipFromFile (clipFile, error), "clip loads: " + error);
+    pumpMessageThread();
+
+    const auto clipLength = processor.getSourceClip().lengthPpq;
+
+    // (note number, sample position counted from the start of playback)
+    using Hit = std::pair<int, juce::int64>;
+
+    const auto play = [&] (double startPpq, int numBlocks)
+    {
+        FakePlayHead playHead;
+        playHead.sampleRate = sampleRate;
+        playHead.ppqPosition = startPpq;
+        processor.setPlayHead (&playHead);
+        processor.prepareToPlay (sampleRate, blockSize);
+
+        juce::AudioBuffer<float> audio (juce::jmax (0, processor.getTotalNumOutputChannels()), blockSize);
+        std::vector<Hit> hits;
+
+        for (int block = 0; block < numBlocks; ++block)
+        {
+            audio.clear();
+            juce::MidiBuffer midi;
+            processor.processBlock (audio, midi);
+
+            for (const auto metadata : midi)
+                if (metadata.getMessage().isNoteOn())
+                    hits.emplace_back (metadata.getMessage().getNoteNumber(),
+                                       (juce::int64) block * blockSize + metadata.samplePosition);
+
+            playHead.advance (blockSize);
+        }
+
+        playHead.playing = false;
+        audio.clear();
+        juce::MidiBuffer tail;
+        processor.processBlock (audio, tail);
+
+        processor.setPlayHead (nullptr);
+        processor.releaseResources();
+        return hits;
+    };
+
+    // Offsets that are not whole multiples of the clip, so bar-locked playback would
+    // have started partway into it.
+    const auto fromTop   = play (0.0, 400);
+    const auto oneBarIn  = play (clipLength + 4.0, 400);
+    const auto midBar    = play (13.5, 400);
+
+    check (! fromTop.empty(), "the clip plays from the project start");
+    check (oneBarIn == fromTop, "starting a bar into the loop plays exactly what starting at bar 1 does");
+    check (midBar == fromTop, "so does starting mid-bar");
+
+    setParam (processor.apvts, "loopClip", 0.0f);
+    pumpMessageThread (5);
+
+    const auto pastTheEnd = play (clipLength * 3.0, 400);
+    check (! pastTheEnd.empty(), "with Loop off, starting past the clip's length still plays it once");
+    setParam (processor.apvts, "loopClip", 1.0f);
+    pumpMessageThread (5);
+}
+
 static void testProcessorStateRoundTrip (const juce::File& clipFile)
 {
     section ("Processor state round trip");
@@ -1097,6 +1168,7 @@ int main (int argc, char** argv)
     const auto clip = here.getChildFile (juce::String (argv[2]));
 
     testProcessorPlaysClip (clip);
+    testHostStartPlaysClipFromTop (clip);
     testProcessorSilentWithoutAClip();
     testProcessorStateRoundTrip (clip);
     testPresetsAndFactoryContent();

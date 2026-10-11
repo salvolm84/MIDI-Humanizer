@@ -42,15 +42,16 @@ namespace
               "swing while the kick stays straight." },
             { LaneField::velocityTarget,   "Target",   pid::velTarget,     0.0, 127.0, 1.0, "",
               "Off leaves the clip's own levels alone. Any other value retargets this drum "
-              "so its AVERAGE velocity becomes that number. Use Dynamics to decide how much "
-              "of your written accenting survives." },
+              "so its AVERAGE velocity becomes that number (its MINIMUM with Spread up only "
+              "on). Use Dynamics to decide how much of your written accenting survives." },
             { LaneField::velocityDynamics, "Dynamics", pid::velDynamics,   0.0, 100.0, 0.1, " %",
               "How much of the programmed accenting survives a retarget. At 0% every hit "
               "lands on the Target. At 100% your dynamics are kept intact and merely "
               "re-centred on it. Only does anything when Target is set." },
             { LaneField::velocitySpread,   "Spread",   pid::velSpread,     0.0,  63.0, 0.5, "",
               "How far each hit's velocity wanders either side of its level, in velocity "
-              "units. Zero makes every hit exactly as loud as its level says." },
+              "units, or only upward with Spread up only on. Zero makes every hit exactly as "
+              "loud as its level says." },
             { LaneField::accent,           "Accents",  pid::accent,        0.0, 100.0, 0.1, " %",
               "Lifts hits that fall on strong grid positions and drops the weak ones. "
               "Measured from where a note was written, before swing and spread move it, so "
@@ -59,6 +60,11 @@ namespace
               "This drum cannot be struck twice inside this time. Hits that break the rule "
               "are dropped, keeping the quieter one out. Flam pairs are exempt. Applies even "
               "when the lane's humanization is switched off." },
+            { LaneField::velocitySpreadUp, "Spread up only", pid::velSpreadUp, 0.0, 1.0, 1.0, "",
+              "Off, Spread wanders either side of the level. On, hits only ever get louder, "
+              "and Target becomes the lane's MINIMUM velocity instead of its average: the "
+              "quietest hit lands on Target and Spread adds up to its amount on top. "
+              "Accents, Variation and Hands can still pull individual hits below it." },
         };
 
         static_assert (juce::numElementsInArray (table) == (size_t) numLaneFields,
@@ -133,6 +139,11 @@ ControlPanel::ControlPanel (MidiHumanizerProcessor& processor)
                          makeScopedKnob (LaneField::velocityDynamics),
                          makeScopedKnob (LaneField::velocitySpread),
                          makeScopedKnob (LaneField::accent) };
+
+        const auto& info = scopedControl (LaneField::velocitySpreadUp);
+        spreadUpToggle = create<ScopedToggle> (info.caption);
+        spreadUpToggle->setHelp (info.help);
+        column.stacked = { spreadUpToggle };
     }
 
     {
@@ -449,6 +460,10 @@ void ControlPanel::rewireScopedKnobs()
             knob->setCallbacks ([this, field] { return readScoped (field); },
                                 [this, field] (double value) { writeScoped (field, value); });
     }
+
+    if (spreadUpToggle != nullptr)
+        spreadUpToggle->setCallbacks ([this] { return readScoped (LaneField::velocitySpreadUp); },
+                                      [this] (double value) { writeScoped (LaneField::velocitySpreadUp, value); });
 }
 
 void ControlPanel::setScope (std::vector<int> noteNumbers, const juce::String& laneLabel)
@@ -549,6 +564,9 @@ void ControlPanel::updateScopeUi()
         if (knob != nullptr)
             knob->setDimmed (! laneEnabled);
 
+    if (spreadUpToggle != nullptr)
+        spreadUpToggle->setDimmed (! laneEnabled);
+
     juce::String suffix;
 
     if (isMaster)
@@ -623,6 +641,9 @@ void ControlPanel::refresh()
     for (auto* knob : scopedKnobs)
         if (knob != nullptr)
             knob->refresh();
+
+    if (spreadUpToggle != nullptr)
+        spreadUpToggle->refresh();
 
     updateStatsLabel();
 }

@@ -247,8 +247,8 @@ because in a DAW silence has several unrelated causes that look identical from o
 | --- | --- |
 | `never called this plugin` | The host is not processing the plugin at all |
 | `no playhead` | Called, but with no transport information; use **Audition** |
-| `playing, bar-locked` | Fully synced to the host's musical position |
-| `playing, position inferred` | Rolling, but the host gave no musical position, so the clip is not bar-locked |
+| `playing, synced` | Fully synced to the host's musical position |
+| `playing, position inferred` | Rolling, but the host gave no musical position, so the plugin keeps its own time |
 | `N notes out on ch C` | Notes are leaving the plugin, on channel `C` |
 
 **Test note** fires a repeating GM kick (note 36) straight out, ignoring the clip, the
@@ -423,6 +423,7 @@ numbers, not an amount multiplied by a range.
 | Target | `Off` leaves the clip's own levels alone. Any value from 1 to 127 retargets the lane so its **average** velocity becomes that value |
 | Dynamics | How much of the written accenting survives a retarget. At 0 % every hit sits on the target; at 100 % your programmed dynamics are kept intact and merely re-centred on it. Only relevant when Target is set |
 | Spread | How far each hit wanders either side of its level |
+| Spread up only | Makes Spread one-sided: hits only get louder than their level, never quieter. Target then sets the lane's **minimum** velocity rather than its average: the quietest hit lands on Target, Dynamics scales the accenting above it, and Spread adds on top. Accents, Variation and Hands can still pull single hits below it |
 | Accents | Lifts hits on strong grid positions and drops weak ones. Measured from where a note was *written*, before swing and spread move it |
 
 So "snare averaging 100 with a bit of variation" is Target 100, Dynamics 0, Spread 10.
@@ -508,8 +509,10 @@ Notes nudged before the clip start wrap round to the end rather than piling up o
 downbeat, because the clip is a loop and that is where they musically belong.
 
 The player derives its position from the host's PPQ every block rather than from an
-internal sample counter, so locates, loops and tempo changes stay locked to the
-arrangement. Sounding notes are tracked separately from the clip, which is what guarantees
+internal sample counter, so tempo changes stay locked to the transport. Positions are
+measured from wherever playback started, so the clip always starts from its top, whichever
+bar you hit play on. A locate or a cycle jump while playing counts as a fresh start and
+restarts the clip too. Sounding notes are tracked separately from the clip, which is what guarantees
 a note-off even when the clip is replaced mid-playback, the transport stops, or a note
 disappears because you changed a setting.
 
@@ -517,14 +520,14 @@ disappears because you changed a setting.
 
 ## Tests and tools
 
-Three console binaries, no host required. Together they run **215 checks**.
+Three console binaries, no host required. Together they run **225 checks**.
 
 ```bash
-# 114 checks: the humanizer, groove extraction, drum map parsers, lane linking,
+# 119 checks: the humanizer, groove extraction, drum map parsers, lane linking,
 # undo history, the clip player's note bookkeeping, MIDI file round trip
 ./build/MidiHumanizerTests_artefacts/Release/MidiHumanizerTests
 
-# 101 checks: the processor over a fake transport, presets, A/B, undo, row
+# 106 checks: the processor over a fake transport, presets, A/B, undo, row
 # visibility, then the built VST3 loaded through JUCE's own VST3 host
 ./build/MidiHumanizerHostTest_artefacts/Release/MidiHumanizerHostTest \
     "build/MidiHumanizer_artefacts/Release/VST3/MIDI Humanizer.vst3" \

@@ -78,6 +78,12 @@ struct LaneSettings
     float velocityDynamics = 0.0f;
 
     float velocitySpread = 0.0f;    ///< 0..63; peak wander either side of the level
+
+    /** Makes the spread one-sided: hits only ever get louder than their level, never
+        quieter. The target then marks the lane's floor rather than its average, so the
+        quietest hit lands on it and the spread stacks on top.
+    */
+    bool  velocitySpreadUpOnly = false;
     float accentAmount   = 0.0f;    ///< 0..100; lifts hits on strong grid positions
 
     // ---- playability --------------------------------------------------------------
@@ -133,6 +139,7 @@ enum class LaneField
     velocitySpread,
     accent,
     minGap,
+    velocitySpreadUp,   ///< boolean, carried as 0 or 1 so it shares the scoped plumbing
     numFields
 };
 
@@ -150,6 +157,7 @@ inline double getLaneField (const LaneSettings& lane, LaneField field)
         case LaneField::velocitySpread:   return lane.velocitySpread;
         case LaneField::accent:           return lane.accentAmount;
         case LaneField::minGap:           return lane.minGapMs;
+        case LaneField::velocitySpreadUp: return lane.velocitySpreadUpOnly ? 1.0 : 0.0;
         case LaneField::numFields:        break;
     }
 
@@ -168,6 +176,7 @@ inline void setLaneField (LaneSettings& lane, LaneField field, double value)
         case LaneField::velocitySpread:   lane.velocitySpread   = (float) value; return;
         case LaneField::accent:           lane.accentAmount     = (float) value; return;
         case LaneField::minGap:           lane.minGapMs         = (float) value; return;
+        case LaneField::velocitySpreadUp: lane.velocitySpreadUpOnly = value > 0.5; return;
         case LaneField::numFields:        break;
     }
 }

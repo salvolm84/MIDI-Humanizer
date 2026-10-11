@@ -36,7 +36,7 @@ namespace
         return byLane;
     }
 
-    /** Average velocity of each lane in the source clip.
+    /** Average and quietest velocity of each lane in the source clip.
 
         Retargeting a lane's level needs to know where that lane currently sits, and it
         has to be measured on the source rather than mid-transform, otherwise accents and
@@ -45,6 +45,7 @@ namespace
     struct LaneMeans
     {
         std::array<double, LaneSettingsTable::numLanes> mean {};
+        std::array<double, LaneSettingsTable::numLanes> lowest {};
         std::array<int, LaneSettingsTable::numLanes> count {};
 
         explicit LaneMeans (const std::vector<Note>& notes)
@@ -53,6 +54,8 @@ namespace
             {
                 const auto lane = (size_t) juce::jlimit (0, LaneSettingsTable::numLanes - 1, n.noteNumber);
                 mean[lane] += (double) n.velocity;
+                lowest[lane] = count[lane] == 0 ? (double) n.velocity
+                                                : juce::jmin (lowest[lane], (double) n.velocity);
                 ++count[lane];
             }
 
@@ -65,6 +68,12 @@ namespace
         {
             const auto lane = (size_t) juce::jlimit (0, LaneSettingsTable::numLanes - 1, noteNumber);
             return count[lane] > 0 ? mean[lane] : fallback;
+        }
+
+        double lowestFor (int noteNumber, double fallback) const
+        {
+            const auto lane = (size_t) juce::jlimit (0, LaneSettingsTable::numLanes - 1, noteNumber);
+            return count[lane] > 0 ? lowest[lane] : fallback;
         }
     };
 }
@@ -144,10 +153,12 @@ NoteSequence Humanizer::process (const NoteSequence& source,
         {
             // Move the lane's average onto the target, keeping as much of the written
             // dynamics as Dynamics asks for. At 0 every hit lands on the target; at 100
-            // the accenting is untouched and merely re-centred.
-            const auto mean = means.meanFor (n.noteNumber, velocity);
+            // the accenting is untouched and merely re-centred. With a one-sided spread
+            // the target is the lane's floor instead, so it anchors the quietest hit.
+            const auto anchor = lane.velocitySpreadUpOnly ? means.lowestFor (n.noteNumber, velocity)
+                                                          : means.meanFor (n.noteNumber, velocity);
             const auto keep = juce::jlimit (0.0, 1.0, (double) lane.velocityDynamics / 100.0);
-            velocity = (double) lane.velocityTarget + keep * (velocity - mean);
+            velocity = (double) lane.velocityTarget + keep * (velocity - anchor);
         }
 
         if (lane.accentAmount > 0.01f)
@@ -331,9 +342,16 @@ NoteSequence Humanizer::process (const NoteSequence& source,
         }
 
         if (lane.velocitySpread > 0.0f)
-            n.velocity += (int) std::lround ((double) lane.velocitySpread
-                                             * det::bipolar (seedForLane (p.seed, lane), n.sourceId,
-                                                             det::velocityStream));
+        {
+            // Folding the same random field keeps a one-sided spread on the same
+            // performance, still clustered near the level, just never below it.
+            auto r = det::bipolar (seedForLane (p.seed, lane), n.sourceId, det::velocityStream);
+
+            if (lane.velocitySpreadUpOnly)
+                r = std::abs (r);
+
+            n.velocity += (int) std::lround ((double) lane.velocitySpread * r);
+        }
     }
 
     // ---- 8. flams ---------------------------------------------------------------
