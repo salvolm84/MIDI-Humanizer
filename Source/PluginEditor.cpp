@@ -3,6 +3,7 @@
 
 #include "PluginEditor.h"
 #include "ParamIDs.h"
+#include "UI/PromisedFileDrop.h"
 
 #include <cmath>
 
@@ -1129,6 +1130,8 @@ void MidiHumanizerEditor::updateHostStatus()
 
 void MidiHumanizerEditor::timerCallback()
 {
+    // The host may give the editor a new native window at any time, so re-check here.
+    acceptPromisedFileDrops (*this);
     updateHostStatus();
     controls.refresh();
 

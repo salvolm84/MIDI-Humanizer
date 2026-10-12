@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(MidiHumanizer VERSION 0.2.0 LANGUAGES C CXX)
+project(MidiHumanizer VERSION 0.2.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -46,6 +46,15 @@ set(MH_SOURCES
     Source/UI/GridToolbar.cpp
     Source/UI/ControlPanel.cpp
     Source/UI/Theme.cpp)
+
+# Lets Reaper's Cmd+Option item drag (a macOS promised-file drag) land on the editor.
+# Deliberately no enable_language(OBJCXX): that would move JUCE's own .mm modules to a
+# language that misses the hidden-visibility preset, so the plugin would export JUCE's
+# symbols and clash with other JUCE binaries in the same host. As CXX sources, clang
+# still compiles .mm files as Objective-C++.
+if(APPLE)
+    list(APPEND MH_SOURCES Source/UI/PromisedFileDrop_mac.mm)
+endif()
 
 set(MH_ENGINE_SOURCES
     Source/Model/DrumMap.cpp

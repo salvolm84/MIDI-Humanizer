@@ -139,8 +139,9 @@ entitlements and code signing. Not built here.
 Three routes, in order of convenience:
 
 1. **Drag a MIDI item from the DAW onto the plugin window.** Most DAWs export a real
-   `.mid` file when you drag a part out (Reaper media items, Cubase parts, Live clips,
-   Studio One), and the plugin accepts that as a normal file drop.
+   `.mid` file when you drag a part out (Cubase parts, Live clips, Studio One), and the
+   plugin accepts that as a normal file drop. In **Reaper**, hold **Cmd+Option** (Ctrl+Alt
+   on Windows) while dragging the item; a plain drag only moves it on the timeline.
 2. **Drag a `.mid` file from Finder.** Always works.
 3. **`Load MIDI…`** — a plain file chooser.
 
@@ -152,12 +153,13 @@ All tracks in the file are flattened into one lane set. Tempo and time signature
 from the file, and the clip length is taken from the end-of-track marker or the last note,
 rounded up to whole bars.
 
-> **Caveat worth testing in your own DAW.** Some hosts implement drag-out as a macOS
-> *promised file* (`NSFilesPromise`) rather than a plain file drag. JUCE's
-> `FileDragAndDropTarget` never receives those, so the drop will simply not register. The
-> plugin also accepts dropped *text* paths, which covers a few more hosts, but if your DAW
-> uses promised files you will need routes 2 or 3. This is a JUCE-level limitation, not
-> something the plugin can work around from inside the editor.
+> **Promised-file drags (macOS).** Some hosts implement drag-out as a macOS *promised
+> file*: the file is only written once the drop target says where it should go. Reaper's
+> Cmd+Option item drag works this way. JUCE only reads plain file URLs, so on its own it
+> ignores these drops. `Source/UI/PromisedFileDrop_mac.mm` fills the gap: it asks the
+> sender to write the file into a temp folder, then hands the real path to the normal drop
+> handling. The plugin also accepts dropped *text* paths, which covers a few more hosts. If
+> your DAW still will not drop, routes 2 and 3 always work.
 
 ### Getting MIDI back out
 
@@ -667,6 +669,7 @@ Source/
     GridToolbar.*       Grid and view settings strip
     ControlPanel.*      Humanization controls
     Widgets.h           Parameter-bound and scope-bound control helpers
+    PromisedFileDrop.*  macOS promised-file drops (Reaper's Cmd+Option item drag)
 Tests/
   EngineTests.cpp       Pure-logic checks
   HostTest.cpp          Transport and hosted-VST3 checks
